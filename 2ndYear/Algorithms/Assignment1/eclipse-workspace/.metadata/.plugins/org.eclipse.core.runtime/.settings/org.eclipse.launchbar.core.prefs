@@ -1,0 +1,10 @@
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch=x86_64
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/name=Local
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=linux
+configDescList=org.eclipse.launchbar.core.descriptorType.default\:SortComparisonTest,org.eclipse.launchbar.core.descriptorType.default\:SortComparison,org.eclipse.launchbar.core.descriptorType.default\:SortComparisonTest (1)
+eclipse.preferences.version=1
+org.eclipse.launchbar.core.descriptorType.default\:SortComparison/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:SortComparison/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
+org.eclipse.launchbar.core.descriptorType.default\:SortComparisonTest\ (1)/activeLaunchMode=run
+org.eclipse.launchbar.core.descriptorType.default\:SortComparisonTest/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:SortComparisonTest/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local

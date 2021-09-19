@@ -1,0 +1,14 @@
+				10			100			1000		1000 duplicate		nearlyOrdered		reverse		sorted
+
+insertion:		7443		
+selection:		5313		
+quick:			19837		
+iterative:		26612		
+recursive:		19610		
+
+
+108453	72839	237447
+253020	76518	82600
+138717	283204	130289
+120486	301665	60781
+184629	80691	261736

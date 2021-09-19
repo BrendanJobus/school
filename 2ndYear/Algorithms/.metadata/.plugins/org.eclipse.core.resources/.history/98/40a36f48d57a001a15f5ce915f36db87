@@ -1,0 +1,197 @@
+/*
+ * A Contest to Meet (ACM) is a reality TV contest that sets three contestants at three random
+ * city intersections. In order to win, the three contestants need all to meet at any intersection
+ * of the city as fast as possible.
+ * It should be clear that the contestants may arrive at the intersections at different times, in
+ * which case, the first to arrive can wait until the others arrive.
+ * From an estimated walking speed for each one of the three contestants, ACM wants to determine the
+ * minimum time that a live TV broadcast should last to cover their journey regardless of the contestants’
+ * initial positions and the intersection they finally meet. You are hired to help ACM answer this question.
+ * You may assume the following:
+ *     Each contestant walks at a given estimated speed.
+ *     The city is a collection of intersections in which some pairs are connected by one-way
+ * streets that the contestants can use to traverse the city.
+ *
+ * This class implements the competition using Dijkstra's algorithm
+ */
+import java.util.*;
+import java.util.Map.Entry;
+import java.io.*;
+
+public class CompetitionDijkstra {
+	
+	// The key will be the vertex, the key of the value hash map will be the vertices it connects to
+	// and the value of the value hash map will be the distance between each of the vertices.
+	HashMap<Integer, HashMap<Integer, Double>> vertexes = new HashMap<Integer, HashMap<Integer, Double>>();
+	
+	int numberOfVertexes, numberOfPaths, sA, sB, sC;
+	int slowestSpeed;
+
+    /**
+     * @param filename: A filename containing the details of the city road network
+     * @param sA, sB, sC: speeds for 3 contestants
+     * @throws Exception 
+    */
+    CompetitionDijkstra (String filename, int sA, int sB, int sC) throws Exception
+    {
+    	this.sA = sA;
+    	this.sB = sB;
+    	this.sC = sC;
+    	
+    	if (sA < sB && sA < sC)
+    		slowestSpeed = sA;
+    	else if (sB < sA && sB < sC)
+    		slowestSpeed = sB;
+    	else
+    		slowestSpeed = sC;
+    	
+    	createTree(filename);
+    }
+
+    /**
+     * @param filename
+     * @throws Exception
+     */
+    public void createTree(String filename) throws Exception
+    {
+    	File file = new File(filename);
+    	BufferedReader br = new BufferedReader(new FileReader(file));
+    	String st;
+    	st = br.readLine();
+    	Scanner sc;
+    	
+    	numberOfVertexes = Integer.parseInt(st);
+    	for (int i = 0; i < numberOfVertexes; i++) 
+    	{
+    		vertexes.put(i, new HashMap<Integer, Double>());
+    	}
+    	
+    	st = br.readLine();
+    	numberOfPaths = Integer.parseInt(st);
+    	System.out.println(numberOfVertexes + " " + numberOfPaths);
+    	
+    	while ((st = br.readLine()) != null)
+    	{
+    		sc = new Scanner(st);
+    		
+    		int vertex1 = Integer.parseInt(sc.next());
+    		int vertex2 = Integer.parseInt(sc.next());
+    		double distance = Double.parseDouble(sc.next());
+    		
+    		vertexes.get(vertex1).put(vertex2, distance);
+    		
+    		System.out.println(st);
+        	sc.close();
+    	}
+    	System.out.println("done\n");
+    }
+
+    /**
+    * @return int: minimum minutes that will pass before the three contestants can meet
+     */
+    public int timeRequiredforCompetition() 
+    {
+    	int longestPath = -1;
+    	// Generate the longest shortest path
+    	for (int allPaths = 0; allPaths < numberOfVertexes; allPaths++)
+    	{
+    		int longestLocalPath = dijkstra(allPaths);
+    		if (longestLocalPath > longestPath)
+    			longestPath = longestLocalPath;
+    	}
+    	
+    	// divide that by the slowest competitor to get worst case scenario
+    	// time required for the competition
+    	int timeForCompetition = longestPath / slowestSpeed;
+    	
+    	return timeForCompetition;
+    }
+
+    /**
+     * @return the time it takes to get from the starting intersection to the finish
+     */
+    public int dijkstra(int startingVertex)
+    {
+    	// TODO: implement dijkstra's algorithm here
+    	
+    	int closestNode = -1;
+    	Double distance = -1.0;
+    	
+    	// The key of hashmap is the distance of this path, the array list within has the path 
+    	//HashMap<Double, ArrayList<Integer>> dist = new HashMap<Double, ArrayList<Integer>>();
+    	
+    	// TODO: left off here
+    	
+    	double dist[] = new double[numberOfVertexes];
+    	Boolean sptSet[] = new Boolean[numberOfVertexes];
+    	
+    	int i;
+    	for (i = 0; i < numberOfVertexes; i++)
+    	{
+    		dist[i] = Integer.MAX_VALUE;
+    		sptSet[i] = false;
+    	}
+    	
+    	dist[startingVertex] = 0;
+    	
+    	for (i = 0; i < numberOfVertexes; i++)
+    	{
+    		int u = minDist(dist, sptSet);
+    		
+    		sptSet[u] = true;
+    		
+    		for (int j = 0; j < numberOfVertexes; j++)
+    		{
+    			if (!sptSet[j] && vertexes.get(u).get(j) != 0 && dist[u] != Integer.MAX_VALUE && dist[u] + vertexes.get(u).get(j) < dist[j]) 
+    				dist[j] = dist[u] + vertexes.get(u).get(j); 
+    		}
+    	}
+    	
+    	Iterator<Entry<Integer, Double>> it = vertexes.get(startingVertex).entrySet().iterator();
+    	while (it.hasNext())
+    	{
+    		Map.Entry<Integer, Double> pair = (Map.Entry<Integer, Double>) it.next();
+    		if (pair.getValue() < distance)
+    		{
+    			closestNode = pair.getKey();
+    			distance = pair.getValue();
+    		}
+    	}
+    	
+    	return -1;
+    }
+    
+    public int minDist(int dist[], Boolean sptSet[])
+    {
+         
+        // Initialize min value 
+        int min = Integer.MAX_VALUE, min_index = -1; 
+  
+        for (int v = 0; v < numberOfVertexes; v++) 
+        {
+            if (sptSet[v] == false && dist[v] <= min) 
+            { 
+                min = dist[v]; 
+                min_index = v; 
+            }  
+        }
+        
+    	return min_index;
+    }
+    
+    public int lengthToLeaf()
+    {
+    	
+    	
+    	return -1;
+    }
+
+    public static void main(String[] args) throws Exception
+    {
+    	CompetitionDijkstra d = new CompetitionDijkstra("tinyEWD.txt", 75, 75, 75);
+    	System.out.println(d.timeRequiredforCompetition());
+    }
+    
+}
+
+// TODO: make a function to implement dijkstra's algorithm

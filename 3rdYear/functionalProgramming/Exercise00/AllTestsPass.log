@@ -1,0 +1,41 @@
+:- stack test
+sex00-0.1.0.0: unregistering (local file changes: src/Ex00.hs)
+ex00> configure (lib + exe + test)
+Configuring ex00-0.1.0.0...
+ex00> build (lib + exe + test)
+Preprocessing library for ex00-0.1.0.0..
+Building library for ex00-0.1.0.0..
+Preprocessing executable 'ex00' for ex00-0.1.0.0..
+Building executable 'ex00' for ex00-0.1.0.0..
+[1 of 2] Compiling Ex00
+[2 of 2] Compiling Main [Ex00 changed]
+Linking .stack-work/dist/x86_64-osx/Cabal-2.4.0.1/build/ex00/ex00 ...
+Preprocessing test suite 'ExerciseZero' for ex00-0.1.0.0..
+Building test suite 'ExerciseZero' for ex00-0.1.0.0..
+[1 of 2] Compiling Ex00
+[2 of 2] Compiling Main [Ex00 changed]
+Linking .stack-work/dist/x86_64-osx/Cabal-2.4.0.1/build/ExerciseZero/ExerciseZero ...
+ex00> copy/register
+Installing library in /Users/butrfeld/REPOS/CSU34016-2021/Exercise00/.stack-work/install/x86_64-osx/b940d802481f45f36591db7affb81310f591e0d882b9be2b549ac89d51634dbd/8.6.4/lib/x86_64-osx-ghc-8.6.4/ex00-0.1.0.0-op1GcdQjhj6WNjxZIG9Bv
+Installing executable ex00 in /Users/butrfeld/REPOS/CSU34016-2021/Exercise00/.stack-work/install/x86_64-osx/b940d802481f45f36591db7affb81310f591e0d882b9be2b549ac89d51634dbd/8.6.4/bin
+Registering library for ex00-0.1.0.0..
+ex00> test (suite: ExerciseZero)
+
+
+Declaration:
+
+@@@ This exercise is all my own work.
+@@@ Signed: Myself, Me
+@@@ 01234567 memyselfi
+: [OK]
+
+Exercise 00 Tests:
+  Say Hello Nicely [10 marks]: [OK]
+
+         Test Cases  Total
+ Passed  2           2
+ Failed  0           0
+ Total   2           2
+
+ex00> Test suite ExerciseZero passed
+Completed 2 action(s).

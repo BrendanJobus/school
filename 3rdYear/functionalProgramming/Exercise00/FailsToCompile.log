@@ -1,0 +1,24 @@
+:- stack test
+ex00-0.1.0.0: unregistering (local file changes: src/Ex00.hs)
+ex00> configure (lib + exe + test)
+Configuring ex00-0.1.0.0...
+ex00> build (lib + exe + test)
+Preprocessing library for ex00-0.1.0.0..
+Building library for ex00-0.1.0.0..
+Preprocessing executable 'ex00' for ex00-0.1.0.0..
+Building executable 'ex00' for ex00-0.1.0.0..
+[1 of 2] Compiling Ex00
+
+/Users/butrfeld/REPOS/CSU34016-2021/Exercise00/src/Ex00.hs:5:14: error:
+    • No instance for (Num String) arising from the literal ‘01234567’
+    • In the expression: 01234567
+      In an equation for ‘idno’: idno = 01234567
+  |
+5 | idno      =  01234567   -- replace with your student id
+  |              ^^^^^^^^
+
+
+--  While building package ex00-0.1.0.0 using:
+      /Users/butrfeld/.stack/setup-exe-cache/x86_64-osx/Cabal-simple_mPHDZzAJ_2.4.0.1_ghc-8.6.4 --builddir=.stack-work/dist/x86_64-osx/Cabal-2.4.0.1 build lib:ex00 exe:ex00 test:ExerciseZero --ghc-options " -fdiagnostics-color=always"
+    Process exited with code: ExitFailure 1
+Progress 1/2
