@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<header>
+    <h1>Lab 1</h1>
+</header>
+<section>
+    <p>
+        Countdown: <a id="Countdown"></a>
+    </p>
+</section>
+
+<script>
+    let counter = 35
+
+    const countDown = document.getElementById("Countdown")
+    countDown.innerText = counter
+    counter -= 5
+    let t = setInterval(function() {
+        countDown.innerText = counter
+        counter -= 5;
+    }, 5000)
+
+    setTimeout(function() {
+        clearInterval(t)
+    }, 21000)
+</script>
