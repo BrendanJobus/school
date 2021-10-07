@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<header>
+    <h1>Lab 1</h1>
+</header>
+<section id="body">
+    <p id="text">
+        Countdown: <a id="Countdown"></a>
+    </p>
+</section>
+
+<script>
+    let counter = 25
+
+    const countDown = document.getElementById("Countdown")
+
+    let count = function(i) {
+        return promise = new Promise((resolve, reject) => {
+            console.log(i)
+            countDown.innerText = i
+            i -= 5
+
+            if (i >= 0) {
+                setTimeout( () => {
+                    count(i).then(resolve)
+                }, 1000)
+            }
+            else {
+                resolve()
+            }
+        })
+    }
+
+    let p = count(counter)
+    p.then( () => {
+        setTimeout( () => {
+            let r = confirm("Go again?")
+            if (r == true) {
+                window.location.reload(true)
+            } else {
+                let b = document.getElementById("body")
+                const newItem = document.createElement('p');
+                newItem.innerHTML = '<p>Done</p>'
+                b.replaceChild(newItem, document.getElementById('text'))
+            }  
+        }, 100)
+    }
+    )
+</script>
