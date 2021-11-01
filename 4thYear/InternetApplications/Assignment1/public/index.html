@@ -1,0 +1,68 @@
+<html>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+<body>
+    <div id="app">
+        <input type="text" v-model.lazy="message" v-on:change="searchCity" placeholder="Search">
+        Current City: <span>{{ message }}</span>
+        <br>
+        <div v-if="seen">
+            Bring umbrella: {{ overAllData[0] }} <br>
+            Pack for {{ overAllData[1] }} Weather <br>
+            Wear a mask: {{ overAllData[2] }} <br>
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Lowest Temp</th>
+                    <th>Highest Temp</th>
+                    <th>Avg. Wind Speed</th>
+                    <th>Rainfall</th>
+                </tr>
+                <tr v-for="d in forecastData">
+                    <td>{{ d[0] }}</td>
+                    <td>{{ d[1] }} Celcius</td>
+                    <td>{{ d[2] }} Celcius</td>
+                    <td>{{ d[3] }} m/s</td>
+                    <td>{{ d[4] }} mm</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: '',
+            seen: false,
+            overAllData: [],
+            forecastData: [],
+        },
+        methods: {
+            searchCity: function () {
+                var payload = {
+                    city: 'London'
+                }
+
+                var data = new FormData();
+                data.append("json", JSON.stringify( payload ));
+
+                fetch("/city", {
+                    method: "PUT",
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ "city": this.message })
+                })
+                .then(function(res){ return res.json(); })
+                .then(function(data) { 
+                    console.log(data);
+                    app.overAllData[0] = data.shift();
+                    app.overAllData[1] = data.shift();
+                    app.overAllData[2] = data.shift();
+                    app.forecastData = data;
+                    app.seen = true;
+                })
+            }
+        }
+    })
+</script>
+</html>
