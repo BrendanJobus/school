@@ -8,7 +8,6 @@ from tensorflow.keras import layers, regularizers
 from keras.layers import Activation, BatchNormalization, Conv2D, Dense, Dropout, Flatten, LeakyReLU, MaxPooling2D
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.utils import shuffle
-import matplotlib.pyplot as plt
 import sys
 
 def convolve(n, k):
