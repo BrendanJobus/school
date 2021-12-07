@@ -1,0 +1,46 @@
+<html>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <body>
+        <div id="app">
+            <button v-on:click="createDatabase" v-if="noDatabase">Create Database</button>
+            <button v-on:click="queryDatabase" v-if="database">Query Database</button>
+            <button v-on:click="destroyDatabase" v-if="database">Destroy Database</button>
+            <br>
+            <input type="text" v-model.lazy="movie" placeholder="Movie Name" v-if="database">
+            <input type="text" v-model.lazy="year" placeholder="Year" v-if="database">
+            <input type="text" v-model.lazy="rating" placeholder="Rating" v-if="database">
+            <br>
+        </div>
+    </body>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                noDatabase: true,
+                database: false,
+                movie: "",
+                year: "",
+                rating: "",
+            },
+            methods: {
+                createDatabase: function () {
+                    app.noDatabase = false;
+                    app.database = true;
+                },
+
+                queryDatabase: function () {
+                    console.log(app.movie, app.year, app.rating);
+                },
+
+                destroyDatabase: function () {
+                    app.movie = "",
+                    app.year = "",
+                    app.rating = "",
+                    app.noDatabase = true;
+                    app.database = false;
+                }
+            }
+        })
+    </script>
+</html>
