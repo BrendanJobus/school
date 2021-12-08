@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1045.0",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.15"
+  }
+}

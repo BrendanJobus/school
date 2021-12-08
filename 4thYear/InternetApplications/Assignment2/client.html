@@ -10,6 +10,24 @@
             <input type="text" v-model.lazy="year" placeholder="Year" v-if="database">
             <input type="text" v-model.lazy="rating" placeholder="Rating" v-if="database">
             <br>
+            <div v-if="data">
+                <button v-on:click="sortByRating">Sort by Rating</button>
+                <button v-on:click="sortByRanking">Sort by Rank</button>
+                <table>
+                    <tr>
+                        <th>Movie</th>
+                        <th>Year of Release</th>
+                        <th>Rating</th>
+                        <th>Rank</th>
+                    </tr>
+                    <tr v-for="m in movies">
+                        <td>{{ m.title  }}</td>
+                        <td>{{ m.year   }}</td>
+                        <td>{{ m.rating }}</td>
+                        <td>{{ m.rank   }}</td>
+                    </tr>
+                </table>
+            </div>
         </div>
     </body>
 
@@ -19,26 +37,82 @@
             data: {
                 noDatabase: true,
                 database: false,
+                data: false,
+                movies: [],
                 movie: "",
                 year: "",
                 rating: "",
+                sortedByRatingUp: false,
+                sortedByRankingUp: false,
             },
             methods: {
-                createDatabase: function () {
-                    app.noDatabase = false;
-                    app.database = true;
+                createDatabase: function() {
+                    fetch("/create")
+                    .then(function(res) {
+                        return res.json()
+                    })
+                    .then(function(data) {
+                        console.log(data.message);
+                        if(data.message == "success") {
+                            app.noDatabase = false;
+                            app.database = true;
+                        }
+                    })
                 },
 
-                queryDatabase: function () {
-                    console.log(app.movie, app.year, app.rating);
+                queryDatabase: function() {
+                    var options = {
+                        method: 'GET',
+                        headers: {
+                            'Movie': app.movie,
+                            'Year': app.year,
+                            'Rating': app.rating,
+                        }
+                    };
+                    fetch("/query", options)
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if(data.message.includes("Failed")) {
+                            
+                        } else {
+                            app.movies = data.data;
+                            app.data = true;
+                        }
+                    });
                 },
 
-                destroyDatabase: function () {
-                    app.movie = "",
-                    app.year = "",
-                    app.rating = "",
+                destroyDatabase: function() {
+                    fetch("/destroy")
+                    .then("Destroyed")
+                    .catch("Caught an error");
                     app.noDatabase = true;
                     app.database = false;
+                    app.data = false;
+                    app.movie = "";
+                    app.year = "";
+                    app.rating = "";
+                },
+
+                sortByRating: function() {
+                    if(app.sortedByRatingUp) {
+                        app.movies = app.movies.sort(function(a, b) {return a.rating - b.rating});
+                        app.sortedByRatingUp = false;
+                        app.sortedByRankUp = false;
+                    } else {
+                        app.movies = app.movies.sort(function(a, b) {return b.rating - a.rating});
+                        app.sortedByRatingUp = true;
+                    }
+                },
+
+                sortByRanking: function() {
+                    if(app.sortedByRankUp) {
+                        app.movies = app.movies.sort(function(a, b) {return b.rank - a.rank});
+                        app.sortedByRankUp = false;
+                        app.sortedByRatingUp = false;
+                    } else {
+                        app.movies = app.movies.sort(function(a, b) {return a.rank - b.rank});
+                        app.sortedByRankUp = true;
+                    }
                 }
             }
         })
