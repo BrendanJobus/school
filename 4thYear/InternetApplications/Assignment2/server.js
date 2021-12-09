@@ -1,25 +1,19 @@
 const express = require('express');
 const app = express();
+const port = 3000;
+
 var AWS = require('aws-sdk');
 AWS.config.update({
+    // Put in your access key ID
     accessKeyId: "AKIAZSSVVP446WY2R7GN",
+    // Put in your secret access key
     secretAccessKey: "TvPC1VtfEdNOWqvTK5qfcgFNfwqrOW4kei68W4Yj",
     region: 'eu-west-1'
 });
-const port = 3000;
-
-app.use(express.json());
-app.use(express.static('public'));
-app.get('/', sendClientFile);
-app.get('/create', createTable);
-app.get('/query', queryTable);
-app.get('/destroy', destroyTable);
-
+const TABLE = 'Movies';
 const BUCKET = "csu44000assignment220";
 const OBJECT = "moviedata.json";
-const TABLE = 'Movies'
-const BATCH_SIZE = 25;
-
+const INSERT_SET_SIZE = 25;
 var s3 = new AWS.S3();
 var ddb = new AWS.DynamoDB();
 
@@ -27,7 +21,7 @@ async function sendClientFile(_, res) {
     res.sendFile(__dirname + "/" + "client.html");
 }
 
-async function createTable(_, res) {
+async function create(_, res) {
     var exists = await checkTableExists();
     if(exists) {
         console.log("Exists");
@@ -35,18 +29,18 @@ async function createTable(_, res) {
         return;
     }
 
-    console.log("Creating...");
+    console.log("Creating Table...");
     var json = await getS3Object(BUCKET, OBJECT);
 
-    await createDynamoTable();
+    await createTable();
     await ddb.waitFor('tableExists', { TableName: TABLE}).promise();
-    await insertIntoDynamoTable(json);
-    console.log('Done!');
+    await insertIntoTable(json);
+    console.log('Table Created');
     returnMessage(res, "success", {});
     return;
 }
 
-async function queryTable(req, res){
+async function query(req, res){
     var movie = req.get('Movie');
     var year = parseInt(req.get('Year'));
     var rating = parseInt(req.get('Rating'));
@@ -59,13 +53,13 @@ async function queryTable(req, res){
         returnMessage(res, "Failed, no starting text given", {})
     } else {
         console.log('Querying...');
-        let data = await queryDynamoTable(movie.toLowerCase(), year.toString(), rating.toString());
-        console.log('Done!');
+        let data = await queryTable(movie.toLowerCase(), year.toString(), rating.toString());
+        console.log('Query Successful');
         returnMessage(res, "Success", data);
     }
 }
 
-async function destroyTable(_, res) {
+async function destroy(_, res) {
     var exists = await checkTableExists();
     if(!exists) {
         console.log("Doesn't Exists");
@@ -73,9 +67,10 @@ async function destroyTable(_, res) {
         return;
     }
 
-    console.log("Deleting...");
-    await destroyDynamoTable();
-    console.log("Done!");
+    console.log("Deleting Table...");
+    var params = { TableName: TABLE };
+    await ddb.deleteTable(params).promise();
+    console.log("Table Deleted");
     returnMessage(res, "success", {});
 }
 
@@ -93,31 +88,31 @@ async function getS3Object() {
     return JSON.parse(data.Body.toString('utf-8'));
 }
 
-async function createDynamoTable() {
+async function createTable() {
     var params = {
-        AttributeDefinitions: [
-            { AttributeName: 'title', AttributeType: 'S' },
-            { AttributeName: 'release_date', AttributeType: 'N' }
-        ],
+        TableName: TABLE,
         KeySchema: [
             { AttributeName: 'title', KeyType: 'HASH' },
             { AttributeName: 'release_date', KeyType: 'RANGE'}
         ],
+        AttributeDefinitions: [
+            { AttributeName: 'title', AttributeType: 'S' },
+            { AttributeName: 'release_date', AttributeType: 'N' }
+        ],
         ProvisionedThroughput: {
             ReadCapacityUnits: 1,
             WriteCapacityUnits: 1
-        },
-        TableName: TABLE
+        }
     }
     await ddb.createTable(params).promise();
 }
 
-async function insertIntoDynamoTable(json) {
-    var batches = [], batch = [];
+async function insertIntoTable(json) {
+    var sets = [], movies = [];
     for(var i = 0; i < json.length; i++) {
-        if(batch.length == BATCH_SIZE) {
-            batches.push(batch);
-            batch = [];
+        if(movies.length == INSERT_SET_SIZE) {
+            sets.push(movies);
+            movies = [];
         }
 
         title = json[i].title;
@@ -129,7 +124,7 @@ async function insertIntoDynamoTable(json) {
         if(json[i].info.hasOwnProperty('rank')) rank = json[i].info.rank.toString();
         else rank = '-1';
 
-        batch.push({
+        movies.push({
             PutRequest: {
                 Item: {
                     title: { 'S': title },
@@ -141,29 +136,31 @@ async function insertIntoDynamoTable(json) {
             }
         });
     }
-    if(batch.length != 0) batches.push(batch);
+    if(movies.length != 0) sets.push(movies);
 
-    for(var i = 0; i < batches.length; i++) {
-        console.log(`Inserting data batch ${i + 1}/${batches.length}`);
-        await ddb.batchWriteItem({ RequestItems: { [TABLE]: batches[i] } }).promise();
+    for(var i = 0; i < sets.length; i++) {
+        var percentComplete = (((i+1) / (sets.length+1)) * 100).toFixed(2);
+        process.stdout.write(`\rData insertion progress: ${percentComplete}% complete\r`);
+        await ddb.batchWriteItem({ RequestItems: { [TABLE]: sets[i] } }).promise();
     }
+    process.stdout.write(`\rData insertion progress: 100% complete\r\n`)
 }
 
-async function queryDynamoTable(movie, year, rating) {
+async function queryTable(movie, year, rating) {
     var params = {
+        TableName: TABLE,
         ExpressionAttributeValues: {
             ':y': {N: year},
             ':t': {S: movie},
             ':r': {N: rating}
         },
-        FilterExpression: 'release_date = :y and begins_with (lowerCaseTitle, :t) and rating >= :r',
-        TableName: TABLE
+        FilterExpression: 'release_date = :y and begins_with (lowerCaseTitle, :t) and rating >= :r'
     }
 
-    var raw = await ddb.scan(params).promise();
+    var res = await ddb.scan(params).promise();
     var data = [];
 
-    raw.Items.forEach(function(item, _, _) {
+    res.Items.forEach(function(item, _, _) {
         data.push({
             title: item.title.S,
             year: item.release_date.N,
@@ -175,11 +172,6 @@ async function queryDynamoTable(movie, year, rating) {
     return data;
 }
 
-async function destroyDynamoTable() {
-    var params = { TableName: TABLE };
-    await ddb.deleteTable(params).promise();
-}
-
 function returnMessage(res, message, data) {
     body = {
         message: message,
@@ -189,24 +181,10 @@ function returnMessage(res, message, data) {
     return;
 }
 
-
-
-
-
-
-
-
-
-
-
+app.use(express.json());
+app.use(express.static('public'));
+app.get('/', sendClientFile);
+app.get('/create', create);
+app.get('/query', query);
+app.get('/destroy', destroy);
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
-
-
-
-// Access key ID for AWS sdk:     AKIAZSSVVP446WY2R7GN
-// Secret Access key for AWS sdk: TvPC1VtfEdNOWqvTK5qfcgFNfwqrOW4kei68W4Yj
-
-// get it onto ec2
-// lastly do a bit of rewriting
-
-// https port at port 443
