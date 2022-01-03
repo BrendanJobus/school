@@ -18,7 +18,6 @@ def reduceStations():
     data = pd.read_csv('./data/dublinbikes_20200101_20200401.csv')
     copy = data.copy()
 
-
     allGeocodes = data.copy()
     allGeocodes = allGeocodes.drop_duplicates(subset=['STATION ID'])
     allGeocodes = allGeocodes[ ['STATION ID', 'LATITUDE', 'LONGITUDE'] ]
@@ -490,7 +489,7 @@ def testModels(y1, y2, combinedY, dt):
 
     ### Finally test Kilmainham on the Blessington Ridge model and Blessington on the Kilmainham Ridge model
 
-#reduceStations()
+reduceStations()
 data = pd.read_csv('./data/bike_data.csv', parse_dates=['TIME'])
 xExtraBless, _ = transformData(data, 'BLESSINGTON STREET')
 yBless, _, dt = extractOccupancyOnly(data, 'BLESSINGTON STREET')
