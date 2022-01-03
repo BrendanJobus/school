@@ -282,13 +282,6 @@ def findUsefulFeatures(x, y, dt, modelType, x1=0, y1=0):
         plotResults(lag, r2s, rmses, 'lag', f'Effect of lag on Ridge Regression predictions for Blessington Street')
         plotResults(lag, r2s_kil, rmses_kil, 'lag', f'Effect of lag on Ridge Regression predictions for Kilmainham Gaol')
 
-        # fig, (ax1, ax2) = plt.subplots(2)
-        # fig.suptitle(f'Effect of lag on Ridge Regression predictions')
-        # ax1.scatter(x=lag, y=r2s); ax1.scatter(x=lag, y=r2s_kil); ax1.set(xlabel='lag', ylabel='R squared'); #ax1.legend(streets)
-        # ax2.scatter(x=lag, y=rmses); ax2.scatter(x=lag, y=rmses_kil); ax2.set(xlabel='lag', ylabel='RMSE'); #ax2.legend(streets)
-        # fig.legend(streets)
-        # plt.show()
-
         ### Find best stride
         stride = [1, 2, 3, 4, 5, 6]
         r2s, rmses, r2s_kil, rmses_kil = [], [], [], []
@@ -300,12 +293,6 @@ def findUsefulFeatures(x, y, dt, modelType, x1=0, y1=0):
             r2s_kil.append(r2); rmses_kil.append(rmse)
         plotResults(stride, r2s, rmses, 'stride', f'Effect of stride on Ridge Regression predictions for Blessington Street')
         plotResults(stride, r2s_kil, rmses_kil, 'stride', f'Effect of stride on Ridge Regression predictions for Kilmainham Gaol')
-
-        # fig, (ax1, ax2) = plt.subplots(2)
-        # fig.suptitle(f'Effect of stride on Ridge Regression predictions')
-        # ax1.scatter(x=stride, y=r2s); ax1.scatter(x=stride, y=r2s_kil); ax1.set(xlabel='stride', ylabel='R squared'); #ax1.legend(streets)
-        # ax2.scatter(x=stride, y=rmses); ax2.scatter(x=stride, y=rmses_kil); ax2.set(xlabel='stride', ylabel='RMSE'); #ax2.legend(streets)
-        # fig.legend(streets)
         plt.show()
 
         immediateR2, dailyR2, weeklyR2, allR2 = [], [], [], []
