@@ -1,0 +1,10 @@
+NOTES
+
+5 ways to prevent inequality:
+
+
+Racial bias:
+
+
+Too male:
+AI is heavily dependent upon the data that is used to train them, and because of this, has some weakspots. AI can be weakened when the data fed in is non-inclusive, or when the AI is self-learning, learning from the data it acquires from users, which can be manipulated for malicious purposes. We can minimise the risk of any system by increasing the diversity of the teams invovled, as shown in many studies, that more diverse teams, and are therefore more cognitively diverse, make better decisions.

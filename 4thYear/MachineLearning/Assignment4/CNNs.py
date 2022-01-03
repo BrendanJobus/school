@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import PIL.Image as Image
+from sklearn import dummy
 from sklearn.metrics import confusion_matrix, classification_report
 from tensorflow import keras
 from tensorflow.keras import regularizers
@@ -133,6 +134,44 @@ def runModel(n=5000, c=0.001, pool=False, deeper=False, title=''):
     print(classification_report(y_test1, y_pred))
     print(confusion_matrix(y_test1,y_pred))
 
+def baseline():
+    num_classes = 10
+    # the data, split between train and test sets
+    (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
+    
+    # takes the first 5000 datapoints in x_train and y_train
+    x_train = x_train[1:5000]; y_train=y_train[1:5000]
+
+    # images are originaly in 0-255 values, regularize them to 0-1
+    # Scale images to the [0, 1] range
+    x_train = x_train.astype("float32") / 255
+    x_test = x_test.astype("float32") / 255
+
+    model = dummy.DummyClassifier(strategy="most_frequent")
+    model.fit(x_train, y_train)
+
+    preds = model.predict(x_train)
+    y_train = sum(y_train.tolist(), [])
+    totalVals = 0
+    correctVals = 0
+    for v, i in enumerate(y_train):
+        if v == preds[i]:
+            correctVals += 1
+        totalVals = i
+    acc = correctVals / totalVals
+    print(acc)
+
+    preds = model.predict(x_test)
+    y_test = sum(y_test.tolist(), [])
+    totalVals = 0
+    correctVals = 0
+    for v, i in enumerate(y_test):
+        if v == preds[i]:
+            correctVals += 1
+        totalVals = i
+    acc = correctVals / totalVals
+    print(acc)
+
 def part1():
     # (a)
     n = [[1, 2, 3, 4, 5], 
@@ -146,9 +185,11 @@ def part1():
     printConvolved(convolve(n, k))
 
     # (b)
-    im = Image.open('square.jpg')
+    im = Image.open('shape.png')
     rgb = np.array(im.convert('RGB'))
     r = rgb[:,:,0]
+    Image.fromarray(np.uint8(r)).show()
+
     kernel1 = [[-1, -1, -1], 
             [-1, 8, -1], 
             [-1, -1, -1]]
@@ -156,12 +197,17 @@ def part1():
             [-1, 8, -1], 
             [0, -1, 0]]
     con1 = convolve(r, kernel1)
-    printConvolved(con1)
+    Image.fromarray(np.uint8(con1)).show()
+    #printConvolved(con1)
     print("\n\n")
     con2 = convolve(r, kernel2)
-    printConvolved(con2)
+    Image.fromarray(np.uint8(con2)).show()
+    #printConvolved(con2)
 
 def part2():
+    # (b) (i)
+    baseline()
+
     # (b) (iii)
     N = [5000, 10000, 20000, 40000]
     for n in N:
@@ -179,4 +225,9 @@ def part2():
     runModel(deeper=True, n=40000, title=f'Thinner and deeper model')
 
 part1()
-part2()
+#part2()
+
+# TODO: 
+#       (i) (b)
+#
+#       (ii) (c) (ii)
