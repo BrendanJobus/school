@@ -2,7 +2,10 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import PIL.Image as Image
+<<<<<<< HEAD
 from sklearn import dummy
+=======
+>>>>>>> 49c746edbb6952823efae06a4f90ca5b4ec4c9da
 from sklearn.metrics import confusion_matrix, classification_report
 from tensorflow import keras
 from tensorflow.keras import regularizers
@@ -134,6 +137,7 @@ def runModel(n=5000, c=0.001, pool=False, deeper=False, title=''):
     print(classification_report(y_test1, y_pred))
     print(confusion_matrix(y_test1,y_pred))
 
+<<<<<<< HEAD
 def baseline():
     num_classes = 10
     # the data, split between train and test sets
@@ -172,6 +176,8 @@ def baseline():
     acc = correctVals / totalVals
     print(acc)
 
+=======
+>>>>>>> 49c746edbb6952823efae06a4f90ca5b4ec4c9da
 def part1():
     # (a)
     n = [[1, 2, 3, 4, 5], 
@@ -185,11 +191,17 @@ def part1():
     printConvolved(convolve(n, k))
 
     # (b)
+<<<<<<< HEAD
     im = Image.open('shape.png')
     rgb = np.array(im.convert('RGB'))
     r = rgb[:,:,0]
     Image.fromarray(np.uint8(r)).show()
 
+=======
+    im = Image.open('square.jpg')
+    rgb = np.array(im.convert('RGB'))
+    r = rgb[:,:,0]
+>>>>>>> 49c746edbb6952823efae06a4f90ca5b4ec4c9da
     kernel1 = [[-1, -1, -1], 
             [-1, 8, -1], 
             [-1, -1, -1]]
@@ -197,6 +209,7 @@ def part1():
             [-1, 8, -1], 
             [0, -1, 0]]
     con1 = convolve(r, kernel1)
+<<<<<<< HEAD
     Image.fromarray(np.uint8(con1)).show()
     #printConvolved(con1)
     print("\n\n")
@@ -208,6 +221,14 @@ def part2():
     # (b) (i)
     baseline()
 
+=======
+    printConvolved(con1)
+    print("\n\n")
+    con2 = convolve(r, kernel2)
+    printConvolved(con2)
+
+def part2():
+>>>>>>> 49c746edbb6952823efae06a4f90ca5b4ec4c9da
     # (b) (iii)
     N = [5000, 10000, 20000, 40000]
     for n in N:
@@ -225,9 +246,13 @@ def part2():
     runModel(deeper=True, n=40000, title=f'Thinner and deeper model')
 
 part1()
+<<<<<<< HEAD
 #part2()
 
 # TODO: 
 #       (i) (b)
 #
 #       (ii) (c) (ii)
+=======
+part2()
+>>>>>>> 49c746edbb6952823efae06a4f90ca5b4ec4c9da
