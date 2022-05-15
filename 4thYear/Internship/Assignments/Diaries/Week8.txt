@@ -1,0 +1,7 @@
+Date 7 - 13 March
+
+Creating Pipeline to build Legacy Adapter against the DEV environment.
+Started actually making the pipeline, to start with, I focused on tring to replicate certain schedules that were already running.
+Learned about importing, rules, workflows, variables and scripting within the yaml file
+
+Weekly Learnings

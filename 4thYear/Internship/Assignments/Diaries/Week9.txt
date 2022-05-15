@@ -1,0 +1,8 @@
+Date 14 - 20 March
+
+Finished the pipeline.
+Learned about our specific variables that we need for access rights to company specific repos and prebuilt systems (for docker use).
+
+Working on the in depth security course, covering security in code and the processes we use to ensure a secure product and systems.
+
+Weekly Learnings

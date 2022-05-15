@@ -1,0 +1,6 @@
+Date 28 February - 6 March
+
+Started work on creating a pipeline for testing a project against our dev environment, mainly looking into the way that the testing on the project we are looking at is done and how we run those tests.
+Also looking into how Gitlab pipelines work, and how we run things using gitlab.yaml files
+
+Weekly Learnings

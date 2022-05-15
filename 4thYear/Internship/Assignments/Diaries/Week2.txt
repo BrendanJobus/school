@@ -1,0 +1,11 @@
+Date 24 - 30 January
+
+This week I was again working on setting up my machine and finishing the courses that had to b completed immediately(cyber security).
+Getting access and developer rights for projects I will be working on.
+
+Wednesday
+Got to do my first deployment, simple version update and merge, but got to see how the company uses different environments, and uses them to create a pipeline for testing code and data. Also got to do a merge on another project, this time merging into a specific release branch instead of master, showing me how we work in patches, and save past branches for customer support and documentation.
+
+Working through getting permissions for local admin rights and applying to access to the programs necessary for development on the projec.
+
+Weekly Learnings

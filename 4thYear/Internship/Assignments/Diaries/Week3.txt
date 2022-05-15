@@ -1,0 +1,9 @@
+Date 31 January - 6 February
+
+After getting admin rights, I set up my machine with the necessary tools that we would be required to use, PostgreSQL, Docker and aws client programs.
+
+Adding updated data set to all envs but production, set up testing for this new data set that will be run every time we updated the system it's apart of or when we add new data similar to it.
+
+This week I worked primarily on adding updated data sets to all our environments except for prod, this would mainly involve updating the file name in projects that are responsible for keeping track of files we are using.
+
+Weekly Learnings

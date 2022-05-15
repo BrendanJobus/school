@@ -1,0 +1,5 @@
+Date 7 - 13 February
+
+Same as week 3, doing file ingestion, setting up tests and getting familiar with the setup of the systems
+
+Weekly Learnings

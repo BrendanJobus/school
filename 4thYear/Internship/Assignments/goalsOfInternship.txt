@@ -1,0 +1,54 @@
+Learn about system architecture in an industry setting
+
+Learn about kubernetes
+
+Interviews throughout company - Interview members of staff throughout different teams and departments of the organisation.
+
+Security in a corporate setting, code and structural  - Measurable, (course and applying/implementinga security patch).
+
+Experience in releases - Do a release for every environment.
+
+Possible Goals:
+Cloud Computing tools
+Write code directly working with sprint and maven
+
+
+SMART
+
+S - Specific goals
+M - Measurable
+A - Why it is achievable
+R - Why it is realistic
+T - When will it be delivered
+
+Interviews:
+
+S - Talk to individuals from a variety of roles and teams throughout the organisation
+M - The number of people I talk to
+A - It is achievable due to the interconnectedness of the company through teams, and the reality that most of the company works in the same timezone, or has a member on their team in my time zone
+R - My line manager is willing to give me support in connecting with individuals and arranging meetings with them
+T - By the end of the internship
+
+Security:
+
+S - Learn about and implement secure coding and ideology
+M - Complete security course and implement at least one security patch
+A - LexisNexis provides a security course that is specialized for developers, it covers basic buisness security and standard computer based security issues that anyone could fall victim to, and then expands into a section on the theory behind different types of attacks, different methods of software development that we can use to help prevent the vulnerabilities that lead to the attacks, secure coding best prctices, as well as the tools that we use to detect them as well, it finishes with examples that you hve to work through to fix vulnerabilities
+R - It is necessary for me to complete it, and I will have to use the material within the course to complete any task in the development cycle
+T - By the end of the month
+
+Release:
+
+S - 
+M - 
+A - 
+R - 
+T - 
+
+
+
+S - Learn about and implement secure coding and ideology
+M - Complete security course and implement at least one security patch
+A - LexisNexis provides a security course that is specialised for developers, it covers basic business security and standard computer based security issues that anyone could fall victim to, and then expands into a section on the theory behind different types of attacks, different methods of software development that we can use to help prevent vulnerabilities, secure coding best practices, as well as the tools that we use to detect them as well, it finishes with examples that you have to work through to fix vulnerabilities
+R - It is necessary for m to complete it, and I will have to use the material within the course to complete any task in the development cycle
+T - By the end of the month

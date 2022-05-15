@@ -1,0 +1,8 @@
+Date 14 - 20 February
+
+Did another peril update
+
+Did my first release, involved updating client files, updating the configuration files and updated the version of the system and then pushed everything to the respective versioned branch.
+
+Weekly Learnings
+Use of config files, versioning, what we do with client data.

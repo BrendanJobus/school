@@ -1,0 +1,7 @@
+Date 21 - 27 March
+
+Still working on security course.
+Fixed performance bug for pipeline.
+Worked with other team on ingesting data that had issues with testing, difference came about due to a difference in parameters used to create certain data.
+
+Weekly Learnings

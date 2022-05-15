@@ -1,0 +1,7 @@
+1. Structuring environments for evolving purposes dev(volatile) -> QA(more stable, used for testing things without customer data) -> CTEST(stable, updated in a cycle?, using customer data to test before being released for customer use) -> Prod(the actual product being used)
+2. Various security features used not just in coding and the product itself, but used throughout the whole company.
+ 2a. When it comes to code and changes to the actual product, we use things such as multiple approvals and 
+
+ 2b. The security approach to all of the other aspects of the company include constant security training and testing.
+
+3. The most important thing that I have learned have been around the interaction between team members

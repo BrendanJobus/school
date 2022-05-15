@@ -1,7 +1,7 @@
 NOTES
 
 5 ways to prevent inequality:
-
+If a training data set containts inherent biases from past human decisions or if it contains less data about a particular minority group, we call this algorithmic bias.
 
 Racial bias:
 

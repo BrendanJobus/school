@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import TimeSeriesSplit, train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
 plt.rc('font', size=18); plt.rcParams['figure.constrained_layout.use'] = True
 
@@ -16,7 +16,6 @@ def euclidAbsDistance(baseLat, baseLong, xLat, xLong):
 
 def reduceStations():
     data = pd.read_csv('./data/dublinbikes_20200101_20200401.csv')
-    copy = data.copy()
 
     allGeocodes = data.copy()
     allGeocodes = allGeocodes.drop_duplicates(subset=['STATION ID'])
@@ -123,14 +122,30 @@ def plotResults(x, r2s, rmses, xlabel, title):
     ax2.scatter(x=x, y=rmses); ax2.set(xlabel=xlabel, ylabel='RMSE')
     fig.show()
 
-def predictor(y, q, dd, lag, modelType='Ridge', stride=1, estimators=20, evl=False):
-    #q-step ahead prediction
-    XX = y[0 : y.size - q - lag * dd : stride]
-    for i in range(1, lag):
-        X = y[i * dd : y.size - q - (lag - i) * dd : stride]
-        XX = np.column_stack((XX, X))
+def predictor(y, q, dd, lag, modelType='Ridge', x=0, stride=1, estimators=20, prnt=True, evl=False):
+    XX = 0
+
+    scaledX=0
+    if type(x) == type(pd.DataFrame()):
+        XX = y[0 : y.size - q - lag * dd : stride]
+        for i in range(1, lag):
+            X = y[i * dd : y.size - q - (lag - i) * dd : stride]
+            XX = np.vstack((XX, X))
+        x = x.iloc[(lag - 1) * dd + q : y.size - (1 * dd) : stride].copy()
+        if lag == 1:
+            x['BIKE HISTORY'] = XX
+        else:
+            for i, X in enumerate(XX):
+                x['BIKE HISTORY ' + str(i + 1)] = X
+        scaled_features = StandardScaler().fit_transform(x.values)
+        scaledX = pd.DataFrame(scaled_features, columns=x.columns)
+    else:
+        XX = y[0 : y.size - q - lag * dd : stride]
+        for i in range(1, lag):
+            X = y[i * dd : y.size - q - (lag - i) * dd : stride]
+            XX = np.column_stack((XX, X))
+
     yy = y[lag * dd + q :: stride]
-    #train, test = train_test_split(np.arange(0, yy.size), test_size=0.2)
 
     tscv = TimeSeriesSplit()
     if lag == 1:
@@ -152,33 +167,34 @@ def predictor(y, q, dd, lag, modelType='Ridge', stride=1, estimators=20, evl=Fal
             featureTotals += model.coef_
             y_pred = model.predict(XX[test])
             r2Total += r2_score(yy[test], y_pred); rmseTotal += np.sqrt(mean_squared_error(yy[test], y_pred)); maeTotal += mean_absolute_error(yy[test], y_pred)
-        print(featureTotals / ([5] * XX.shape[1]))
+        if prnt == True:
+            print(featureTotals / ([5] * XX.shape[1]))
     else:
-        for train, test in tscv.split(XX, yy):
-            model = RandomForestRegressor(n_estimators=estimators, random_state=42).fit(XX[train], yy[train])
-            y_pred = model.predict(XX[test])
+        for train, test in tscv.split(scaledX, yy):
+            model = RandomForestRegressor(n_estimators=estimators, random_state=42).fit(scaledX.iloc[train], yy[train])
+            y_pred = model.predict(scaledX.iloc[test])
             r2Total += r2_score(yy[test], y_pred); rmseTotal += np.sqrt(mean_squared_error(yy[test], y_pred)); maeTotal += mean_absolute_error(yy[test], y_pred)
 
     if evl:
         return r2Total / 5, rmseTotal / 5, maeTotal / 5
     return r2Total / 5, rmseTotal / 5
 
-def fullPredictor(x, y, q, dd, lag, modelType='Ridge'):
-    stride=1
-
-    x = x.iloc[(lag - 1) * dd : y.size - q - (lag - 2) * dd : stride].copy()
+def fullPredictor(x, y, q, dd, lag, modelType='Ridge', stride=1, estimators=20):
+    x = x.iloc[(lag - 1) * dd + q : y.size - (1 * dd) : stride].copy()
 
     XX = y[0 : y.size - q - lag * dd : stride]
-    for i in range(0, lag):
+    for i in range(1, lag):
         X = y[i * dd : y.size - q - (lag - i) * dd : stride]
         XX = np.vstack((XX, X))
 
-    for i, X in enumerate(XX):
-        x['BIKE HISTORY ' + str(i + 1)] = X
+    if lag == 1:
+        x['BIKE HISTORY'] = XX
+    else:
+        for i, X in enumerate(XX):
+            x['BIKE HISTORY ' + str(i + 1)] = X
     scaled_features = StandardScaler().fit_transform(x.values)
-    scaledX = pd.DataFrame(scaled_features, index = x.index, columns=x.columns)
+    scaledX = pd.DataFrame(scaled_features, columns=x.columns)
     yy = y[lag * dd + q :: stride]
-    #train, test = train_test_split(np.arange(0, yy.size), test_size=0.2)
 
     tscv = TimeSeriesSplit()
     featureTotals = [0] * scaledX.shape[1]
@@ -193,30 +209,50 @@ def fullPredictor(x, y, q, dd, lag, modelType='Ridge'):
         print(featureTotals / ([5] * scaledX.shape[1]))
     else:
         for train, test in tscv.split(scaledX, yy):
-            model = RandomForestRegressor(n_estimators=20, random_state=42).fit(scaledX.iloc[train], yy[train])
+            model = RandomForestRegressor(n_estimators=estimators, random_state=42).fit(scaledX.iloc[train], yy[train])
             y_pred = model.predict(scaledX.iloc[test])
             r2Total += r2_score(yy[test], y_pred); rmseTotal += np.sqrt(mean_squared_error(yy[test], y_pred))
 
     return r2Total / 5, rmseTotal / 5
 
-def seasonalityPredictor(y, q, d, w, lag, modelType='Ridge', stride=1, estimators=20, evl=False):
+def seasonalityPredictor(y, q, d, w, lag, modelType='Ridge', x=0, stride=1, estimators=20, evl=False):
     lngth = y.size - w - lag * w - q
-    XX = y[q : q + lngth : stride]
-    for i in range(1, lag):
-        X = y[i * w + q : i * w + q + lngth : stride]
-        XX = np.column_stack((XX, X))
-    for i in range(0, lag):
-        X = y[i * d + q : i * d + q + lngth : stride]
-        XX = np.column_stack((XX, X))
-    for i in range(0, lag):
-        X = y[i : i + lngth : stride]
-        XX = np.column_stack((XX, X))
+    XX = 0
+
+    scaledX=0
+    if type(x) == type(pd.DataFrame()):
+        XX = y[q : q + lngth : stride]
+        for i in range(1, lag):
+            X = y[i * w + q : i * w + q + lngth : stride]
+            XX = np.vstack((XX, X))
+        for i in range(0, lag):
+            X = y[i * d + q : i * d + q + lngth : stride]
+            XX = np.vstack((XX, X))
+        for i in range(0, lag):
+            X = y[i : i + lngth : stride]
+            XX = np.vstack((XX, X))
+        x = x.iloc[(lag - 1) * w + w + q : (lag - 1) * w + w + q + lngth : stride].copy()
+        for i, X in enumerate(XX):
+            x['BIKE HISTORY ' + str(i + 1)] = X
+        scaled_features = StandardScaler().fit_transform(x.values)
+        scaledX = pd.DataFrame(scaled_features, columns=x.columns)
+    else:
+        XX = y[q : q + lngth : stride]
+        for i in range(1, lag):
+            X = y[i * w + q : i * w + q + lngth : stride]
+            XX = np.column_stack((XX, X))
+        for i in range(0, lag):
+            X = y[i * d + q : i * d + q + lngth : stride]
+            XX = np.column_stack((XX, X))
+        for i in range(0, lag):
+            X = y[i : i + lngth : stride]
+            XX = np.column_stack((XX, X))
+        featureTotals = [0] * XX.shape[1]
+        XX = StandardScaler().fit_transform(XX)
+
     yy = y[lag * w + w + q : lag * w + w + q + lngth : stride]
-    #train, test  = train_test_split(np.arange(0, yy.size), test_size=0.2)
 
     tscv = TimeSeriesSplit()
-    featureTotals = [0] * XX.shape[1]
-    XX = StandardScaler().fit_transform(XX)
     r2Total = 0
     rmseTotal = 0
     maeTotal = 0
@@ -228,9 +264,9 @@ def seasonalityPredictor(y, q, d, w, lag, modelType='Ridge', stride=1, estimator
             r2Total += r2_score(yy[test], y_pred); rmseTotal += np.sqrt(mean_squared_error(yy[test], y_pred)); maeTotal += mean_absolute_error(yy[test], y_pred)
         print(featureTotals / ([5] * XX.shape[1]))
     else:
-        for train, test in tscv.split(XX, yy):
-            model = RandomForestRegressor(n_estimators=estimators, random_state=42).fit(XX[train], yy[train])
-            y_pred = model.predict(XX[test])
+        for train, test in tscv.split(scaledX, yy):
+            model = RandomForestRegressor(n_estimators=estimators, random_state=42).fit(scaledX.iloc[train], yy[train])
+            y_pred = model.predict(scaledX.iloc[test])
             r2Total += r2_score(yy[test], y_pred); rmseTotal += np.sqrt(mean_squared_error(yy[test], y_pred)); maeTotal += mean_absolute_error(yy[test], y_pred)
 
     if evl:
@@ -243,15 +279,49 @@ def findUsefulFeatures(x, y, dt, modelType, x1=0, y1=0):
     Q = [2, 6, 12]
 
     if modelType == 'Ridge':
+        print(f"\nDoing a basic run to see what features are useful and what aren't, the features currently are: {x.columns}")
+        print(f'Blessington')
+        fullPredictor(x, y, 2, 1, 3)
+        print(f'Kilmainham')
+        fullPredictor(x1, y1, 2, 1, 3)
+
+        x = x.drop(['Unnamed: 0', 'STATION ID', 'BIKE STANDS', 'STATUS', 'LATITUDE', 'LONGITUDE'], axis=1)
+        x1 = x1.drop(['Unnamed: 0', 'STATION ID', 'BIKE STANDS', 'STATUS', 'LATITUDE', 'LONGITUDE'], axis=1)
+
+        print(f"\nDoing a basic run to see what features are useful and what aren't, the features currently are: {x.columns}")
+        print(f'Blessington')
+        fullPredictor(x, y, 2, 1, 3)
+        print(f'Kilmainham')
+        fullPredictor(x1, y1, 2, 1, 3)
+        print('\n')
+
+        polynomials = [1, 2, 3, 4]
+        r2s, rmses, r2s_kil, rmses_kil = [], [], [], []
+        for p in polynomials:
+            xPoly = PolynomialFeatures(p).fit_transform(x)
+            xPoly = pd.DataFrame(xPoly)
+            r2, rmse = fullPredictor(xPoly, y, 2, 1, 3)
+            r2s.append(r2); rmses.append(rmse)
+            xPoly = PolynomialFeatures(p).fit_transform(x1)
+            xPoly = pd.DataFrame(xPoly)
+            r2, rmse = fullPredictor(xPoly, y1, 2, 1, 3)
+            r2s_kil.append(r2); rmses_kil.append(rmse)
+        plotResults(polynomials, r2s, rmses, 'polynomials', 'Looking at the effect of polynomial feature engineering for Blessington')
+        plotResults(polynomials, r2s_kil, rmses_kil, 'polynomials', 'Looking at the effect of polynomial feature engineering for Kilmainham')
+        plt.show()
+
         # Going to plot q vs r2 and q vs rmse, with two colors, one for just time series data, and one with full data
         r2s, r2sFull, rmses, rmsesFull = [], [], [], []
         r2s_kil, r2sFull_kil, rmses_kil, rmsesFull_kil = [], [], [], []
         for q in Q:
+            print(f'Predicting {q} steps ahead')
+            print(f'Blessington')
             r2, rmse = predictor(y, q, 1, 3)
             r2s.append(r2); rmses.append(rmse)
             r2, rmse = fullPredictor(x, y, q, 1, 3)
             r2sFull.append(r2); rmsesFull.append(rmse)
 
+            print(f'Kilmainham')
             r2, rmse = predictor(y1, q, 1, 3)
             r2s_kil.append(r2); rmses_kil.append(rmse)
             r2, rmse = fullPredictor(x1, y1, q, 1, 3)
@@ -261,7 +331,7 @@ def findUsefulFeatures(x, y, dt, modelType, x1=0, y1=0):
         axs[0, 0].scatter(x=Q, y=r2s); axs[0, 0].scatter(x=Q, y=r2sFull); axs[0, 0].set(xlabel='q', ylabel='R squared'); #axs[0, 0].legend(['Time Series', 'Full Dataset']); 
         axs[0, 0].set_title("Blessington Street")
         axs[1, 0].scatter(x=Q, y=rmses); axs[1, 0].scatter(x=Q, y=rmsesFull); axs[1, 0].set(xlabel='q', ylabel='RMSE'); #axs[1, 0].legend(['Time Series', 'Full Dataset'])
-        axs[0, 1].scatter(x=Q, y=r2s_kil); axs[0, 1].scatter(x=Q, y=rmses_kil); axs[0, 1].set(xlabel='q', ylabel='R squared'); #axs[0, 1].legend(['Time Series', 'Full Dataset']); 
+        axs[0, 1].scatter(x=Q, y=r2s_kil); axs[0, 1].scatter(x=Q, y=r2sFull_kil); axs[0, 1].set(xlabel='q', ylabel='R squared'); #axs[0, 1].legend(['Time Series', 'Full Dataset']); 
         axs[0, 1].set_title("Kilmainham Gaol")
         axs[1, 1].scatter(x=Q, y=rmses_kil); axs[1, 1].scatter(x=Q, y=rmsesFull_kil); axs[1, 1].set(xlabel='q', ylabel='RMSE'); #axs[1, 1].legend(['Time Series', 'Full Dataset'])
         fig.legend(['Time Series', 'Full Dataset'])
@@ -340,11 +410,15 @@ def findUsefulFeatures(x, y, dt, modelType, x1=0, y1=0):
         fig.legend(seasonality)
         plt.show()
     else:
+        reducedX = x.copy()
+        c = reducedX.columns
+        c = c.drop('STATION ID').copy()
+        reducedX = reducedX.drop(c, axis=1).copy()
         r2s, r2sFull, rmses, rmsesFull = [], [], [], []
         for q in Q:
-            r2, rmse = predictor(y, q, 1, 3, 'Forest')
+            r2, rmse = predictor(y, q, 1, 3, 'Forest', x=reducedX)
             r2s.append(r2); rmses.append(rmse)
-            r2, rmse = fullPredictor(x, y, q, 1, 3, 'Forest')
+            r2, rmse = predictor(y, q, 1, 3, 'Forest', x=x)
             r2sFull.append(r2); rmsesFull.append(rmse)
         fig, (ax1, ax2) = plt.subplots(2)
         fig.suptitle('Comparison of time series only model vs timeseries with extra data predictor on Random Forest Model')
@@ -357,7 +431,8 @@ def findUsefulFeatures(x, y, dt, modelType, x1=0, y1=0):
         lag = [1, 2, 3, 4, 5, 6]
         r2s, rmses = [], []
         for l in lag:
-            r2, rmse = predictor(y, q, 1, l)
+            tmpX = reducedX.copy()
+            r2, rmse = fullPredictor(tmpX, y, q, 1, l, 'Forest')
             r2s.append(r2); rmses.append(rmse)
         plotResults(lag, r2s, rmses, 'lag', f'Effect of lag on on Random Forest Model predictions')
 
@@ -365,7 +440,8 @@ def findUsefulFeatures(x, y, dt, modelType, x1=0, y1=0):
         stride = [1, 2, 3, 4, 5, 6]
         r2s, rmses = [], []
         for s in stride:
-            r2, rmse = predictor(y, q, 1, 3, stride=s)
+            tmpX = reducedX.copy()
+            r2, rmse = fullPredictor(tmpX, y, q, 1, 1, 'Forest', stride=s)
             r2s.append(r2); rmses.append(rmse)
         plotResults(stride, r2s, rmses, 'stride', f'Effect of stride on on Random Forest Model predictions')
 
@@ -373,7 +449,8 @@ def findUsefulFeatures(x, y, dt, modelType, x1=0, y1=0):
         estimators = [1, 5, 10, 20, 50]
         r2s, rmses = [], []
         for e in estimators:
-            r2, rmse = predictor(y, q, 1, 3, 'Forest', estimators=e)
+            tmpX = reducedX.copy()
+            r2, rmse = fullPredictor(tmpX, y, q, 1, 1, 'Forest', stride=3, estimators=e)
             r2s.append(r2); rmses.append(rmse)
         plotResults(estimators, r2s, rmses, 'estimators', 'Effect of estimators on Random Forest Model predictions')
         plt.show()
@@ -385,16 +462,20 @@ def findUsefulFeatures(x, y, dt, modelType, x1=0, y1=0):
             print('Models with only occupancy data')
             print(f'Predicting {q} steps ahead')
             print('Immedieate Trend')
-            r2, rmse = predictor(y, q, 1, 6, 'Forest', stride=4)
+            tmpX = reducedX.copy()
+            r2, rmse = fullPredictor(tmpX, y, q, 1, 1, 'Forest', stride=3, estimators=20)
             immediateR2.append(r2); immediateRMSE.append(rmse)
             print('Daily Seasonality')
-            r2, rmse = predictor(y, q, d, 6, 'Forest', stride=4)
+            tmpX = reducedX.copy()
+            r2, rmse = fullPredictor(tmpX, y, q, d, 1, 'Forest', stride=3, estimators=20)
             dailyR2.append(r2); dailyRMSE.append(rmse)
             print('Weekly Seasonality')
-            r2, rmse = predictor(y, q, w, 6, 'Forest', stride=4)
+            tmpX = reducedX.copy()
+            r2, rmse = fullPredictor(tmpX, y, q, w, 1, 'Forest', stride=3, estimators=20)
             weeklyR2.append(r2); weeklyRMSE.append(rmse)
             print('All Together')
-            r2, rmse = seasonalityPredictor(y, q, d, w, 6, 'Forest', stride=4)
+            tmpX = reducedX.copy()
+            r2, rmse = seasonalityPredictor(y, q, d, w, 6, 'Forest', x=tmpX, stride=3, estimators=20)
             allR2.append(r2); allRMSE.append(rmse)
             print('\n')
         fig, (ax1, ax2) = plt.subplots(2)
@@ -412,7 +493,6 @@ def evalDummy(model, y, q, lag, stride):
     yy = y[lag * 1 + q :: stride]
     
     tscv = TimeSeriesSplit()
-    featureTotals = [0] * XX.shape[1]
     XX = StandardScaler().fit_transform(XX)
 
     r2Total = 0
@@ -425,10 +505,16 @@ def evalDummy(model, y, q, lag, stride):
         r2Total += r2_score(yy[test], y_pred); rmseTotal += np.sqrt(mean_squared_error(yy[test], y_pred)); maeTotal += mean_absolute_error(yy[test], y_pred)
     return r2Total / 5, rmseTotal / 5, maeTotal / 5
 
-def testModels(y1, y2, combinedY, dt):
-    d = math.floor(24 * 60 * 60 / dt)
-    w = math.floor(7 * 24 * 60 * 60 / dt)
+def testModels(x, y1, y2, combinedY, dt):
+    reducedX = x.copy()
+    c = reducedX.columns
+    c = c.drop('STATION ID').copy()
+    x = reducedX.drop(c, axis=1).copy()
+    Q = [2, 6, 12]
 
+    dummyR2, ridgeBr2, ridgeKr2, forestR2 = [], [], [], []
+    dummyRMSE, ridgeBrmse, ridgeKrmse, forestRMSE = [], [], [], []
+    dummyMAE, ridgeBmae, ridgeKmae, forestMAE = [], [], [], []
     # When testing the models, we're going to use R squared, RMSE, MAE
     q = 2
     print(f'Evaluations for predicting {q * 5} minutes ahead')
@@ -437,16 +523,20 @@ def testModels(y1, y2, combinedY, dt):
     dummyY = combinedY[q :: 1]
     model = DummyRegressor(strategy='mean')
     r2, rmse, mae = evalDummy(model, dummyY, 1, 3, 1)
+    dummyR2.append(r2); dummyRMSE.append(rmse);  dummyMAE.append(mae)
     print(f'\nDummy model: \nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
 
     ### Ridge Seasonality: 1  lag: 1 for Blessington and 6 for Kilmainham    Stride: 2 and 1
-    r2, rmse, mae = predictor(y1, q, 1, 1, stride=2, evl=True)
+    r2, rmse, mae = predictor(y1, q, 1, 2, stride=6, evl=True, prnt=False)
     print(f'\nRidge model on Blessington Street: \nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
-    r2, rmse, mae = predictor(y2, q, 1, 6, stride=1, evl=True)
+    ridgeBr2.append(r2); ridgeBrmse.append(rmse); ridgeBmae.append(mae)
+    r2, rmse, mae = predictor(y2, q, 1, 6, stride=1, evl=True, prnt=False)
+    ridgeKr2.append(r2); ridgeKrmse.append(rmse); ridgeKmae.append(mae)
     print(f'\nRidge model: Kilmainham Gaol\nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
 
-    ### Forest Seasonality: 1 Lag: 6    Stride: 4
-    r2, rmse, mae = predictor(combinedY, q, 1, 6, modelType='Forest', stride=4, estimators=20, evl=True)
+    ### Forest Seasonality: 1 Lag: 1    Stride: 3
+    r2, rmse, mae = predictor(combinedY, q, 1, 1, modelType='Forest', x=x, stride=3, estimators=20, evl=True)
+    forestR2.append(r2); forestRMSE.append(rmse); forestMAE.append(mae)
     print(f'\nRandom forest regressor: \nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
 
     q = 6
@@ -456,16 +546,20 @@ def testModels(y1, y2, combinedY, dt):
     dummyY = combinedY[q :: 1]
     model = DummyRegressor(strategy='mean')
     r2, rmse, mae = evalDummy(model, dummyY, 1, 3, 1)
+    dummyR2.append(r2); dummyRMSE.append(rmse);  dummyMAE.append(mae)
     print(f'\nDummy model: \nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
 
     ### Ridge Seasonality: 1  lag:    Stride: 
-    r2, rmse, mae = predictor(y1, q, 1, 1, stride=2, evl=True)
+    r2, rmse, mae = predictor(y1, q, 1, 2, stride=6, evl=True, prnt=False)
+    ridgeBr2.append(r2); ridgeBrmse.append(rmse); ridgeBmae.append(mae)
     print(f'\nRidge model on Blessington Street: \nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
-    r2, rmse, mae = predictor(y2, q, 1, 6, stride=1, evl=True)
+    r2, rmse, mae = predictor(y2, q, 1, 6, stride=1, evl=True, prnt=False)
+    ridgeKr2.append(r2); ridgeKrmse.append(rmse); ridgeKmae.append(mae)
     print(f'\nRidge model: Kilmainham Gaol\nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
 
     ### Forest Seasonality: Lag:    Stride: 
-    r2, rmse, mae = predictor(combinedY, q, 1, 6, modelType='Forest', stride=4, estimators=20, evl=True)
+    r2, rmse, mae = predictor(combinedY, q, 1, 1, modelType='Forest', x=x, stride=3, estimators=20, evl=True)
+    forestR2.append(r2); forestRMSE.append(rmse); forestMAE.append(mae)
     print(f'\nRandom forest regressor: \nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
 
     q = 12
@@ -475,19 +569,29 @@ def testModels(y1, y2, combinedY, dt):
     dummyY = combinedY[q :: 1]
     model = DummyRegressor(strategy='mean')
     r2, rmse, mae = evalDummy(model, dummyY, 1, 3, 1)
+    dummyR2.append(r2); dummyRMSE.append(rmse);  dummyMAE.append(mae)
     print(f'\nDummy model: \nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
 
     ### Ridge Seasonality: 1  lag:    Stride: 
-    r2, rmse, mae = predictor(y1, q, 1, 1, stride=2, evl=True)
+    r2, rmse, mae = predictor(y1, q, 1, 2, stride=6, evl=True, prnt=False)
+    ridgeBr2.append(r2); ridgeBrmse.append(rmse); ridgeBmae.append(mae)
     print(f'\nRidge model on Blessington Street: \nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
-    r2, rmse, mae = predictor(y2, q, 1, 6, stride=1, evl=True)
+    r2, rmse, mae = predictor(y2, q, 1, 6, stride=1, evl=True, prnt=False)
+    ridgeKr2.append(r2); ridgeKrmse.append(rmse); ridgeKmae.append(mae)
     print(f'\nRidge model: Kilmainham Gaol\nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
 
     ### Forest Seasonality: Lag:    Stride: 
-    r2, rmse, mae = predictor(combinedY, q, 1, 6, modelType='Forest', stride=4, estimators=20, evl=True)
+    r2, rmse, mae = predictor(combinedY, q, 1, 1, modelType='Forest', x=x, stride=3, estimators=20, evl=True)
+    forestR2.append(r2); forestRMSE.append(rmse); forestMAE.append(mae)
     print(f'\nRandom forest regressor: \nR2 = {r2}, RMSE = {rmse}, MAE = {mae}')
 
-    ### Finally test Kilmainham on the Blessington Ridge model and Blessington on the Kilmainham Ridge model
+    models=['Dummy', 'Blessington Ridge', 'Kilmainham Ridge', 'Random Forest']
+    plt.scatter(x=Q, y=dummyR2); plt.scatter(x=Q, y=ridgeBr2); plt.scatter(x=Q, y=ridgeKr2); plt.scatter(x=Q, y=forestR2); plt.xlabel('q'); plt.ylabel('R squared'); plt.title('R squared Results'); plt.legend(models)
+    plt.show()
+    plt.scatter(x=Q, y=dummyRMSE); plt.scatter(x=Q, y=ridgeBrmse); plt.scatter(x=Q, y=ridgeKrmse); plt.scatter(x=Q, y=forestRMSE); plt.xlabel('q'); plt.ylabel('RMSE'); plt.title('RMSE Results'); plt.legend(models)
+    plt.show()
+    plt.scatter(x=Q, y=dummyMAE); plt.scatter(x=Q, y=ridgeBmae); plt.scatter(x=Q, y=ridgeKmae); plt.scatter(x=Q, y=forestMAE); plt.xlabel('q'); plt.ylabel('MAE'); plt.title('MAE Results'); plt.legend(models)
+    plt.show()
 
 reduceStations()
 data = pd.read_csv('./data/bike_data.csv', parse_dates=['TIME'])
@@ -501,4 +605,4 @@ findUsefulFeatures(xExtraBless, yBless, dt, 'Ridge', x1=xExtraKil, y1=yKil)
 
 findUsefulFeatures(combinedExtraX, combinedY, dt, 'Forest')
 
-testModels(yBless, yKil, combinedY, dt)
+testModels(combinedExtraX, yBless, yKil, combinedY, dt)

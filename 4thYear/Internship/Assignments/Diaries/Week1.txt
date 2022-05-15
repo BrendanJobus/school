@@ -1,0 +1,15 @@
+Date 17 - 23 January
+
+Day 1
+First day, was going to have a meeting with line manager first thing and show passport, but issues arose with signing into the laptop, so spent the first 3 hours working on getting the laptop set to log in, have to log in to a vpn before being able to log into the network, from there, met the team and started getting the programs that are required for the project. Was assigned a team member to help me outin my first couple of day, though, I can go to anone for something, so I can go between different team members if they specialize in some area.
+
+Day 2
+Second day, finishing getting the programs necessary to work on the project, also requesting for access to the aws environments that we will be working on, Val(team member assigned to show me around), gave me a quick run through of the project and the processes that run project, giving me better insight into the flow of the system and the overall project goals.
+
+Week Long
+Throughout the week, I was required to do certain onboarding courses pertaining to things lik security, cyber security and ethics. as well as this, I was primarily working on getting my machine up and running with the required programs to work on the project.
+
+Week in Review
+Doing required courses and setting up machine while getting introduced to the team, some team members gave me a hand with setup of different things.
+
+Weekly Learnings

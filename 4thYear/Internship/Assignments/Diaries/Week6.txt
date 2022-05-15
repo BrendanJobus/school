@@ -1,0 +1,5 @@
+Date 21 - 27 February
+
+Worked on adding data to all envs except for prod, learned how we set up tests for continued testing of data, so that for every release, we are testing for all of the shared data that we are supplying.
+
+Weekly Learnings
